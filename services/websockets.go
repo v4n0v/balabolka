@@ -19,6 +19,8 @@ var wsupgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
+var clients = make(map[string]*websocket.Conn)
+
 func wsMsgHandler(c *gin.Context) {
 	wsupgrader.CheckOrigin = func(r *http.Request) bool { return true }
 
@@ -27,7 +29,9 @@ func wsMsgHandler(c *gin.Context) {
 		fmt.Println("failed to set websocket upgrade: %+v", err)
 		return
 	}
-
+	var name = conn.LocalAddr().String()
+	clients[name] = conn
+	println(fmt.Sprintf("New client handled, name = %s", name))
 	for {
 		t, msg, err := conn.ReadMessage()
 		if err != nil {
@@ -48,6 +52,9 @@ func wsMsgHandler(c *gin.Context) {
 			panic("failed to write message")
 		}
 	}
+	delete(clients, name)
+	println(fmt.Sprintf("Client  %s forgotten", name))
+
 }
 
 func wsEchoHandler(c *gin.Context) {
@@ -58,7 +65,9 @@ func wsEchoHandler(c *gin.Context) {
 		fmt.Println("failed to set websocket upgrade: %+v", err)
 		return
 	}
-
+	var name = conn.LocalAddr().String()
+	clients[name] = conn
+	println(fmt.Sprintf("New client handled, name = %s", name))
 	for {
 		t, msg, err := conn.ReadMessage()
 		if err != nil {
@@ -71,4 +80,7 @@ func wsEchoHandler(c *gin.Context) {
 			panic("failed to write message")
 		}
 	}
+	delete(clients, name)
+	println(fmt.Sprintf("Client  %s forgotten", name))
+
 }
