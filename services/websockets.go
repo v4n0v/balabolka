@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"net/http"
+	"sync"
 )
 
 func RegisterWebSockets(router *gin.Engine) {
@@ -19,7 +20,7 @@ var wsupgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-var clients = make(map[string]*websocket.Conn)
+var clients sync.Map
 
 func wsMsgHandler(c *gin.Context) {
 	wsupgrader.CheckOrigin = func(r *http.Request) bool { return true }
@@ -30,7 +31,8 @@ func wsMsgHandler(c *gin.Context) {
 		return
 	}
 	var name = conn.LocalAddr().String()
-	clients[name] = conn
+	clients.Store(name, conn)
+
 	println(fmt.Sprintf("New client handled, name = %s", name))
 	for {
 		t, msg, err := conn.ReadMessage()
@@ -52,7 +54,7 @@ func wsMsgHandler(c *gin.Context) {
 			panic("failed to write message")
 		}
 	}
-	delete(clients, name)
+	clients.Delete(name)
 	println(fmt.Sprintf("Client  %s forgotten", name))
 
 }
@@ -66,7 +68,7 @@ func wsEchoHandler(c *gin.Context) {
 		return
 	}
 	var name = conn.LocalAddr().String()
-	clients[name] = conn
+	clients.Store(name, conn)
 	println(fmt.Sprintf("New client handled, name = %s", name))
 	for {
 		t, msg, err := conn.ReadMessage()
@@ -74,13 +76,19 @@ func wsEchoHandler(c *gin.Context) {
 			break
 		}
 		println(fmt.Sprintf("conn.ReadMessage %s complete", msg))
-		err = conn.WriteMessage(t, msg)
 
-		if err != nil {
-			panic("failed to write message")
-		}
+		clients.Range(func(key, value interface{}) bool {
+			conn = value.(*websocket.Conn)
+			err = conn.WriteMessage(t, msg)
+			println(fmt.Sprintf("sending %s to %s", msg, conn.LocalAddr().String()))
+			if err != nil {
+				return false
+			}
+			return true
+		})
+
 	}
-	delete(clients, name)
+	clients.Delete(name)
 	println(fmt.Sprintf("Client  %s forgotten", name))
 
 }
