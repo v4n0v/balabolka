@@ -21,3 +21,6 @@ COPY --from=builder /go/src/balabolka /go/src/balabolka
 #пробрасываем порт вашей программы наружу образа
 EXPOSE 8080
 ENTRYPOINT ["./go/src/balabolka/balabolka"]
+
+#docker build -t balabolka_app .
+#sudo docker run -itd -p 8080:8080 balabolka_app
