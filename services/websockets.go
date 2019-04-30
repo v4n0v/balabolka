@@ -67,7 +67,7 @@ func wsEchoHandler(c *gin.Context) {
 		fmt.Println("failed to set websocket upgrade: %+v", err)
 		return
 	}
-	var name = conn.LocalAddr().String()
+	var name = conn.RemoteAddr().String()
 	clients.Store(name, conn)
 	println(fmt.Sprintf("New client handled, name = %s", name))
 	for {
