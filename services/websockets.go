@@ -30,7 +30,7 @@ func wsMsgHandler(c *gin.Context) {
 		panic(err)
 		return
 	}
-	var name = conn.LocalAddr().String()
+	var name = conn.RemoteAddr().String()
 	clients.Store(name, conn)
 
 	println(fmt.Sprintf("New client handled, name = %s", name))
@@ -39,6 +39,7 @@ func wsMsgHandler(c *gin.Context) {
 		if err != nil {
 			break
 		}
+
 		println(fmt.Sprintf("receiving message:\n%s", msg))
 		var myMessage models.Message
 		err = json.Unmarshal(msg, &myMessage)
