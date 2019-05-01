@@ -47,6 +47,9 @@ func wsMsgHandler(c *gin.Context) {
 		}
 
 		bt, err := json.Marshal(myMessage)
+		if err != nil {
+			panic("failed marshal json")
+		}
 
 		err = conn.WriteMessage(t, bt)
 
