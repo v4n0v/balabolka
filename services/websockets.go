@@ -27,7 +27,7 @@ func wsMsgHandler(c *gin.Context) {
 
 	conn, err := wsupgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		fmt.Println("failed to set websocket upgrade: %+v", err)
+		panic(err)
 		return
 	}
 	var name = conn.LocalAddr().String()
@@ -39,20 +39,20 @@ func wsMsgHandler(c *gin.Context) {
 		if err != nil {
 			break
 		}
-
+		println(fmt.Sprintf("receiving message:\n%s", msg))
 		var myMessage models.Message
 		err = json.Unmarshal(msg, &myMessage)
 		if err != nil {
 			panic("failed unmarshal json")
 		}
-
+		println("some logic with message")
 		bt, err := json.Marshal(myMessage)
 		if err != nil {
 			panic("failed marshal json")
 		}
 
 		err = conn.WriteMessage(t, bt)
-
+		println(fmt.Sprintf("sended message:\n%s", string(bt)))
 		if err != nil {
 			panic("failed to write message")
 		}
