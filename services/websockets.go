@@ -51,12 +51,15 @@ func wsMsgHandler(c *gin.Context) {
 		if err != nil {
 			panic("failed marshal json")
 		}
-
-		err = conn.WriteMessage(t, bt)
-		println(fmt.Sprintf("sended message:\n%s", string(bt)))
-		if err != nil {
-			panic("failed to write message")
-		}
+		clients.Range(func(key, value interface{}) bool {
+			conn = value.(*websocket.Conn)
+			err = conn.WriteMessage(t, bt)
+			println(fmt.Sprintf("sending %s to %s", msg, conn.RemoteAddr().String()))
+			if err != nil {
+				return false
+			}
+			return true
+		})
 	}
 	clients.Delete(name)
 	println(fmt.Sprintf("Client  %s forgotten", name))
